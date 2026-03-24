@@ -1,0 +1,6 @@
+path: EVD4UAV/yolo_nongye
+train: images/train
+val: images/val
+
+names:
+  0: "0"
