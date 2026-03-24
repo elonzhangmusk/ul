@@ -18,6 +18,8 @@ Examples:
 """
 
 from .block import (
+    ASFF_Concat,
+    EMA,
     C1,
     C2,
     C2PSA,
@@ -107,6 +109,7 @@ from .transformer import (
 )
 
 __all__ = (
+    "ASFF_Concat",
     "AIFI",
     "C1",
     "C2",

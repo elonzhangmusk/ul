@@ -12,6 +12,8 @@ import torch.nn as nn
 
 from ultralytics.nn.autobackend import check_class_names
 from ultralytics.nn.modules import (
+    ASFF_Concat,
+    EMA,
     AIFI,
     C1,
     C2,
@@ -436,7 +438,7 @@ class DetectionModel(BaseModel):
         """Set attributes of the model head (last layer).
 
         Args:
-            **kwargs: Arbitrary keyword arguments representing attributes to set.
+            **kwargs (Any): Arbitrary keyword arguments representing attributes to set.
         """
         head = self.model[-1]
         for k, v in kwargs.items():
@@ -1676,8 +1678,13 @@ def parse_model(d, ch, verbose=True):
             c2 = args[1] if args[3] else args[1] * 4
         elif m is torch.nn.BatchNorm2d:
             args = [ch[f]]
-        elif m is Concat:
+        # elif m is Concat:
+        #     c2 = sum(ch[x] for x in f)
+        elif m in {Concat, ASFF_Concat}:
             c2 = sum(ch[x] for x in f)
+            # --- 新增逻辑：如果是 ASFF，把特征图的通道数列表打包传给它 ---
+            if m is ASFF_Concat:
+                args = [[ch[x] for x in f]]
         elif m in frozenset(
             {
                 Detect,
@@ -1714,6 +1721,9 @@ def parse_model(d, ch, verbose=True):
             c2 = args[0]
             c1 = ch[f]
             args = [*args[1:]]
+        elif m is EMA:
+            c2 = ch[f]   # 确保输出通道数等于输入通道数
+            args = [c2]  # 将自动缩放后的通道数传给 EMA
         else:
             c2 = ch[f]
 

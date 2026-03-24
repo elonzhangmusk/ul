@@ -149,6 +149,7 @@ dmypy.json
 
 # datasets and projects (ignore /datasets dir at root only to allow for docs/en/datasets dir)
 /datasets
+/EVD4UAV/
 runs/
 wandb/
 .DS_Store
