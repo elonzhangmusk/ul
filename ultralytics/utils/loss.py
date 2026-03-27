@@ -131,13 +131,14 @@ class BboxLoss(nn.Module):
         # iou = bbox_iou(pred_bboxes[fg_mask], target_bboxes[fg_mask], xywh=False, CIoU=True)
         # loss_iou = ((1.0 - iou) * weight).sum() / target_scores_sum
         loss_iou = 0
- 
+
         iou = bbox_iou(pred_bboxes[fg_mask], target_bboxes[fg_mask], xywh=False, CIoU=True)
         nwd = torch.exp(
-            -torch.pow(Wasserstein(pred_bboxes[fg_mask].T, target_bboxes[fg_mask], xywh=False), 1 / 2) / 1.0)
+            -torch.pow(Wasserstein(pred_bboxes[fg_mask].T, target_bboxes[fg_mask], xywh=False), 1 / 2) / 1.0
+        )
         # loss_iou = (((1.0 - iou) * weight).sum() / target_scores_sum ) * 0.5  +(((1.0 - nwd) * weight).sum() / target_scores_sum ) * 0.5
         loss_iou1 = ((1.0 - iou).mean()) * 0.5 + ((1.0 - nwd).mean()) * 0.5
- 
+
         loss_iou = loss_iou + loss_iou1
 
         # DFL loss
@@ -161,6 +162,7 @@ class BboxLoss(nn.Module):
 
         return loss_iou, loss_dfl
 
+
 def Wasserstein(box1, box2, xywh=True):
     box2 = box2.T
     if xywh:
@@ -174,10 +176,11 @@ def Wasserstein(box1, box2, xywh=True):
     cx_L2Norm = torch.pow((b1_cx - b2_cx), 2)
     cy_L2Norm = torch.pow((b1_cy - b2_cy), 2)
     p1 = cx_L2Norm + cy_L2Norm
-    w_FroNorm = torch.pow((b1_w - b2_w)/2, 2)
-    h_FroNorm = torch.pow((b1_h - b2_h)/2, 2)
+    w_FroNorm = torch.pow((b1_w - b2_w) / 2, 2)
+    h_FroNorm = torch.pow((b1_h - b2_h) / 2, 2)
     p2 = w_FroNorm + h_FroNorm
     return p1 + p2
+
 
 class RLELoss(nn.Module):
     """Residual Log-Likelihood Estimation Loss.
