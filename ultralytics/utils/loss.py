@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import math
 from typing import Any
 
@@ -113,6 +115,7 @@ class BboxLoss(nn.Module):
         """Initialize the BboxLoss module with regularization maximum and DFL settings."""
         super().__init__()
         self.dfl_loss = DFLoss(reg_max) if reg_max > 1 else None
+        self.use_nwd = os.getenv("YOLO_USE_NWD", "1").lower() not in {"0", "false", "no"}
 
     def forward(
         self,
@@ -130,15 +133,14 @@ class BboxLoss(nn.Module):
         weight = target_scores.sum(-1)[fg_mask].unsqueeze(-1)
         # iou = bbox_iou(pred_bboxes[fg_mask], target_bboxes[fg_mask], xywh=False, CIoU=True)
         # loss_iou = ((1.0 - iou) * weight).sum() / target_scores_sum
-        loss_iou = 0
- 
         iou = bbox_iou(pred_bboxes[fg_mask], target_bboxes[fg_mask], xywh=False, CIoU=True)
-        nwd = torch.exp(
-            -torch.pow(Wasserstein(pred_bboxes[fg_mask].T, target_bboxes[fg_mask], xywh=False), 1 / 2) / 1.0)
-        # loss_iou = (((1.0 - iou) * weight).sum() / target_scores_sum ) * 0.5  +(((1.0 - nwd) * weight).sum() / target_scores_sum ) * 0.5
-        loss_iou1 = ((1.0 - iou).mean()) * 0.5 + ((1.0 - nwd).mean()) * 0.5
- 
-        loss_iou = loss_iou + loss_iou1
+        if self.use_nwd:
+            nwd = torch.exp(
+                -torch.pow(Wasserstein(pred_bboxes[fg_mask].T, target_bboxes[fg_mask], xywh=False), 1 / 2) / 1.0
+            )
+            loss_iou = ((1.0 - iou).mean()) * 0.5 + ((1.0 - nwd).mean()) * 0.5
+        else:
+            loss_iou = ((1.0 - iou) * weight).sum() / target_scores_sum
 
         # DFL loss
         if self.dfl_loss:
