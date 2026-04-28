@@ -1,0 +1,8 @@
+# EVD4UAV 数据集配置文件，用于无人机视角车辆小目标检测任务。
+path: EVD4UAV/yolo_dataset
+train: images/train
+val: images/val
+
+names:
+  0: car
+

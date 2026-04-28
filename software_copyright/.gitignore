@@ -1,0 +1,11 @@
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+*.mlmodel
+runs/
+datasets/
+__pycache__/
+*.pyc
+
