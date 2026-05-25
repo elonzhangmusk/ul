@@ -9,6 +9,7 @@
 > 在保持 YOLO12 原始多尺度检测框架不变的前提下，本文仅对 backbone 最深层的重型特征提取模块进行轻量化替换，将原始 `A2C2f` 替换为 `C3Ghost`，从而实现更低的参数量、更小的计算量和更快的推理速度。
 
 所以这张图不是“把所有层都画满”，而是要突出：
+
 - 原始 YOLO12 的基本拓扑
 - 你的模型沿用了哪些部分
 - 你的核心改动发生在哪个位置
@@ -30,6 +31,7 @@
 根据 `ultralytics/cfg/models/12/yolo12.yaml`，原始 YOLO12n 可以概括为：
 
 ### 3.1 Backbone
+
 - `Conv` 下采样到 P1/2
 - `Conv` 下采样到 P2/4
 - `C3k2` 做浅层特征提取
@@ -41,6 +43,7 @@
 - `A2C2f` 做最深层特征提取
 
 ### 3.2 Neck
+
 - 上采样 + `Concat` 与 P4 融合
 - `A2C2f` 融合特征
 - 再上采样 + `Concat` 与 P3 融合
@@ -49,6 +52,7 @@
 - 再通过下采样回流到 P5
 
 ### 3.3 Head
+
 - 三个尺度检测头：`P3`、`P4`、`P5`
 - 最终由 `Detect` 模块输出分类和边框回归结果
 
@@ -57,6 +61,7 @@
 根据 `ultralytics/cfg/models/12/yolo12_yange.yaml`，你的版本基本保留了原始 YOLO12n 的主体结构，唯一需要在架构图上高亮的改动是：
 
 ### 4.1 核心改动点
+
 原始 YOLO12：
 
 ```yaml
@@ -72,7 +77,9 @@
 也就是说，**你仅将 backbone 最深层 P5/32 的重型 `A2C2f` 模块替换为轻量化 `C3Ghost` 模块**。
 
 ### 4.2 这个改动为什么是“核心改动”？
+
 因为它同时满足三点：
+
 - 改动很小，不破坏原始多尺度检测拓扑
 - 改动位置足够关键，位于最深层高语义特征提取位置
 - 改动目标非常明确，就是做轻量化
@@ -84,29 +91,35 @@
 为了让图既专业又不显得太乱，建议你统一使用下面这些名称：
 
 ### 5.1 输入层
+
 - `Input Image`
 - 可在旁边标注：`1024 x 1024`
 
 ### 5.2 Backbone
+
 - `Conv`
 - `C3k2 Block`
 - `A2C2f Block`
 - `C3Ghost Block`
 
 ### 5.3 Neck
+
 - `Upsample`
 - `Concat`
 - `A2C2f Fusion Block`
 - `Conv Downsample`
 
 ### 5.4 检测头
+
 - `P3 Detection Head`
 - `P4 Detection Head`
 - `P5 Detection Head`
 - `Detect`
 
 ### 5.5 你的改动标注
+
 你可以专门加一个红框或注释框：
+
 - `Lightweight Replacement`
 - `A2C2f -> C3Ghost`
 - `Only modification in the backbone`
@@ -136,6 +149,7 @@ P3/P4/P5 -> Detect
 ```
 
 如果你画图软件支持颜色，我建议：
+
 - 原始 YOLO12 公共模块用灰色或蓝色
 - 你的改动模块 `C3Ghost` 用红色或橙色
 - 三个输出头用绿色或紫色区分
@@ -155,11 +169,13 @@ P3/P4/P5 -> Detect
 你可以直接把方法部分写成下面这种风格：
 
 ### 中文版
+
 本文模型整体沿用 YOLO12 的多尺度检测框架，由 Backbone、Neck 和 Detect Head 三部分组成。Backbone 负责逐步提取从浅层纹理信息到深层语义信息的多级特征，Neck 通过上采样与横向连接实现多尺度特征融合，最终由 Detect Head 在 P3、P4 和 P5 三个尺度上完成目标分类与边框回归。
 
 与原始 YOLO12 不同，本文并未对整体检测拓扑进行大规模重构，而是采用一种更克制的轻量化策略：仅在 Backbone 最深层的高语义特征提取阶段，将原始 A2C2f 模块替换为 C3Ghost 模块。该设计的出发点在于，浅层与中层特征对小目标检测更为敏感，因此尽量保持原始结构不变；而最深层特征提取模块计算开销较大，更适合作为轻量化改造的位置。通过这种单点替换，模型在保持原始三尺度检测框架的同时，有效降低了参数量与计算量，并提升了推理速度。
 
 ### 英文版
+
 The proposed model follows the original YOLO12 multi-scale detection paradigm, consisting of a backbone, a neck, and a detection head. The backbone progressively extracts hierarchical features from shallow texture information to deep semantic representations. The neck performs multi-scale feature fusion through upsampling and lateral concatenation, and the detection head produces object classification and bounding box regression outputs on three prediction scales, namely P3, P4, and P5.
 
 Unlike the original YOLO12, the proposed method does not redesign the entire detection topology. Instead, a conservative lightweight strategy is adopted by replacing only the deepest A2C2f block in the backbone with a C3Ghost block. This design is motivated by the observation that shallow and intermediate features are more critical for preserving small-object representations, while the deepest semantic stage contributes more heavily to computational overhead. Therefore, the proposed modification reduces model complexity and inference cost while retaining the original three-scale detection framework.
@@ -169,20 +185,25 @@ Unlike the original YOLO12, the proposed method does not redesign the entire det
 如果论文版面允许，我建议你除了整体架构图，再加一个右侧小图，专门放大这个替换模块：
 
 ### 小图标题建议
+
 - `Detailed structure of the lightweight replacement block`
 - `Replacement of A2C2f with C3Ghost in the deepest backbone stage`
 
 ### 小图内容建议
+
 左边画原模块：
+
 - `A2C2f`
 - 标注：`heavy semantic extraction`
 
 右边画改进模块：
+
 - `C3Ghost`
 - 内部可简化表示为多个 `GhostBottleneck`
 - 标注：`lightweight semantic extraction`
 
 箭头中间写：
+
 - `Replace`
 - 或 `Lightweight substitution`
 
