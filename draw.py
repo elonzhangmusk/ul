@@ -46,6 +46,7 @@ plt.rcParams.update(
     }
 )
 
+
 def make_panel_a():
     baseline_color = "#7F7F7F"
     ours_color = "#D55E00"

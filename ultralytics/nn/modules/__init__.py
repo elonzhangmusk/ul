@@ -18,8 +18,6 @@ Examples:
 """
 
 from .block import (
-    ASFF_Concat,
-    EMA,
     C1,
     C2,
     C2PSA,
@@ -28,6 +26,7 @@ from .block import (
     CIB,
     DFL,
     ELAN1,
+    EMA,
     PSA,
     SPP,
     SPPELAN,
@@ -35,6 +34,7 @@ from .block import (
     A2C2f,
     AConv,
     ADown,
+    ASFF_Concat,
     Attention,
     BNContrastiveHead,
     Bottleneck,
@@ -109,7 +109,6 @@ from .transformer import (
 )
 
 __all__ = (
-    "ASFF_Concat",
     "AIFI",
     "C1",
     "C2",
@@ -130,6 +129,7 @@ __all__ = (
     "A2C2f",
     "AConv",
     "ADown",
+    "ASFF_Concat",
     "Attention",
     "BNContrastiveHead",
     "Bottleneck",
