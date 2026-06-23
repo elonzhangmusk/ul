@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-import os
-
 import math
+import os
 from typing import Any
 
 import torch
@@ -163,6 +162,7 @@ class BboxLoss(nn.Module):
 
         return loss_iou, loss_dfl
 
+
 def Wasserstein(box1, box2, xywh=True):
     box2 = box2.T
     if xywh:
@@ -176,10 +176,11 @@ def Wasserstein(box1, box2, xywh=True):
     cx_L2Norm = torch.pow((b1_cx - b2_cx), 2)
     cy_L2Norm = torch.pow((b1_cy - b2_cy), 2)
     p1 = cx_L2Norm + cy_L2Norm
-    w_FroNorm = torch.pow((b1_w - b2_w)/2, 2)
-    h_FroNorm = torch.pow((b1_h - b2_h)/2, 2)
+    w_FroNorm = torch.pow((b1_w - b2_w) / 2, 2)
+    h_FroNorm = torch.pow((b1_h - b2_h) / 2, 2)
     p2 = w_FroNorm + h_FroNorm
     return p1 + p2
+
 
 class RLELoss(nn.Module):
     """Residual Log-Likelihood Estimation Loss.
