@@ -8,14 +8,10 @@ import math
 import numpy as np
 import torch
 import torch.nn as nn
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-
 
 __all__ = (
-    "EMA",
     "CBAM",
+    "EMA",
     "ChannelAttention",
     "Concat",
     "Conv",
@@ -42,37 +38,37 @@ def autopad(k, p=None, d=1):  # kernel, padding, dilation
 
 
 class ASFF_Concat(nn.Module):
+    """Adaptive Spatial Feature Fusion Concat (为小目标/无人机场景定制) 在 Concat 之前，计算各个输入特征图的空间注意力权重，实现自适应融合。.
     """
-    Adaptive Spatial Feature Fusion Concat (为小目标/无人机场景定制)
-    在 Concat 之前，计算各个输入特征图的空间注意力权重，实现自适应融合。
-    """
+
     def __init__(self, ch):
         # ch 是一个列表，包含了所有即将被 concat 的特征图的通道数
         super().__init__()
         self.attention = nn.Sequential(
             nn.Conv2d(sum(ch), len(ch), kernel_size=1, bias=False),
             nn.BatchNorm2d(len(ch)),
-            nn.Softmax(dim=1) # 在输入特征的数量维度上做 Softmax
+            nn.Softmax(dim=1),  # 在输入特征的数量维度上做 Softmax
         )
 
     def forward(self, x):
         # x 是一个 list，例如 [特征图P2, 特征图P3]
         # 1. 先进行物理拼接，用于计算注意力映射
         concat_x = torch.cat(x, dim=1)
-        
+
         # 2. 计算空间权重 weights 的维度将是 [Batch, len(x), H, W]
         weights = self.attention(concat_x)
-        
+
         # 3. 将权重乘回各自的特征图
         # weights[:, i:i+1, :, :] 取出第 i 个特征图对应的空间权重图
-        out = [x[i] * weights[:, i:i+1, :, :] for i in range(len(x))]
-        
+        out = [x[i] * weights[:, i : i + 1, :, :] for i in range(len(x))]
+
         # 4. 返回加权后的融合拼接结果
         return torch.cat(out, dim=1)
 
+
 class EMA(nn.Module):
     def __init__(self, channels, factor=8):
-        super(EMA, self).__init__()
+        super().__init__()
         self.groups = factor
         assert channels // self.groups > 0
         self.softmax = nn.Softmax(-1)
@@ -98,7 +94,8 @@ class EMA(nn.Module):
         x22 = x1.reshape(b * self.groups, c // self.groups, -1)  # b*g, c//g, hw
         weights = (torch.matmul(x11, x12) + torch.matmul(x21, x22)).reshape(b * self.groups, 1, h, w)
         return (group_x * weights.sigmoid()).reshape(b, c, h, w)
-    
+
+
 class Conv(nn.Module):
     """Standard convolution module with batch normalization and activation.
 
